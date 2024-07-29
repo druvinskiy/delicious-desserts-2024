@@ -7,34 +7,19 @@
 
 import SwiftUI
 
-@MainActor
 final class DessertsViewModel: ObservableObject {
-    @Published var desserts = [Dessert]()
-    @Published var isLoading = false
-    @Published var errorString: String?
+    @Published private var dessertsPrivate = [Dessert]()
     
-    let networkManager: DessertNetworkManager
-    
-    init(networkManager: DessertNetworkManager = .shared) {
-        self.networkManager = networkManager
+    init(desserts: [Dessert]) {
+        self.desserts = desserts
     }
     
-    func fetchDesserts() {
-        isLoading = true
-        
-        Task {
-            do {
-                self.desserts = try await networkManager.fetchDesserts()
-                    .sorted()
-                
-                isLoading = false
-            } catch {
-                if let ddError = error as? DDError {
-                    errorString = ddError.description
-                } else {
-                    errorString = error.localizedDescription
-                }
-            }
+    var desserts: [Dessert] {
+        get {
+            dessertsPrivate.sorted()
+        }
+        set {
+            dessertsPrivate = newValue
         }
     }
 }

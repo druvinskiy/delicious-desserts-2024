@@ -12,6 +12,7 @@ struct DeliciousDessertsSwiftUIApp: App {
     var body: some Scene {
         WindowGroup {
             DessertsView()
+                .environmentObject(DessertNetworkManager.shared)
         }
     }
 }

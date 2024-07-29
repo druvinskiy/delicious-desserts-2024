@@ -7,12 +7,12 @@
 
 import Foundation
 
-enum DDError: Error {
+enum DDError: LocalizedError {
     case invalidURL(urlString: String)
     case invalidResponse(description: String? = nil)
     case invalidData(error: Error? = nil)
     
-    var description: String {
+    var errorDescription: String? {
         switch self {
         case .invalidURL(let urlString):
             return String(localized: "invalidURL \(urlString)")

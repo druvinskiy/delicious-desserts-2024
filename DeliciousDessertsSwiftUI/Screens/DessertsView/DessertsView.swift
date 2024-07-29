@@ -8,34 +8,61 @@
 import SwiftUI
 
 struct DessertsView: View {
-    @StateObject var viewModel = DessertsViewModel()
+    enum LoadingState {
+        case loading
+        case data(DessertsViewModel)
+        case error(Error)
+    }
+    
+    @State private var loadingState: LoadingState = .loading
+    @EnvironmentObject var networkManager: DessertNetworkManager
+    
+    var body: some View {
+        NavigationView {
+            switch loadingState {
+            case .loading:
+                LoadingView()
+            case .data(let viewModel):
+                DessertsScrollView(viewModel: viewModel)
+            case .error(let error):
+                ErrorView(message: error.localizedDescription)
+                    .overlay {
+                        Button("Retry") {
+                            fetchDesserts()
+                        }
+                        .offset(y: 150)
+                    }
+            }
+        }
+        .task {
+            fetchDesserts()
+        }
+    }
+    
+    func fetchDesserts() {
+        Task {
+            do {
+                let desserts = try await networkManager.fetchDesserts()
+                let viewModel = DessertsViewModel(desserts: desserts)
+                
+                loadingState = .data(viewModel)
+            } catch {
+                loadingState = .error(error)
+            }
+        }
+    }
+}
+
+struct DessertsScrollView: View {
+    let viewModel: DessertsViewModel
     
     let columns = [GridItem(.flexible())]
     
     var body: some View {
-        Group {
-            if let errorString = viewModel.errorString {
-                ErrorView(message: errorString)
-            } else if viewModel.isLoading {
-                LoadingView()
-            } else {
-                NavigationView {
-                    dessertsScrollView
-                }
-            }
-        }
-        .onAppear {
-            viewModel.fetchDesserts()
-        }
-    }
-    
-    private var dessertsScrollView: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 20) {
                 ForEach(viewModel.desserts) { dessert in
-                    let detailViewModel = DessertDetailViewModel(dessert: dessert)
-                    
-                    NavigationLink(destination: DessertDetailView(viewModel: detailViewModel)) {
+                    NavigationLink(destination: DessertDetailView(dessert: dessert)) {
                         DessertCell(dessert: dessert)
                     }
                     .buttonStyle(.cardButtonStyle)

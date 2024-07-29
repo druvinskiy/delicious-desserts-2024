@@ -7,36 +7,18 @@
 
 import SwiftUI
 
-@MainActor
 final class DessertDetailViewModel: ObservableObject {
-    @Published var detail: DessertDetail?
-    @Published var errorString: String?
-    @Published var isLoading = false
+    @Published private var detail: DessertDetail
     
-    let dessert: Dessert
-    let networkManager: DessertNetworkManager
-    
-    init(dessert: Dessert, networkManager: DessertNetworkManager = .shared) {
-        self.dessert = dessert
-        self.networkManager = networkManager
-        
-        fetchDetails()
+    var ingredients: [String] {
+        return detail.ingredients.map { "\($0.measurement) \($0.name)" }
     }
     
-    func fetchDetails() {
-        isLoading = true
-        
-        Task {
-            do {
-                self.detail = try await self.networkManager.fetchDetails(for: dessert)
-                isLoading = false
-            } catch {
-                if let ddError = error as? DDError {
-                    errorString = ddError.description
-                } else {
-                    errorString = error.localizedDescription
-                }
-            }
-        }
+    var instructions: String {
+        return detail.instructions
+    }
+    
+    init(detail: DessertDetail) {
+        self.detail = detail
     }
 }
